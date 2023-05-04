@@ -1,0 +1,582 @@
+---
+include:
+  - docassemble.AssemblyLine:assembly_line.yml
+  - docassemble.ALMassachusetts:al_massachusetts.yml
+  - docassemble.MassAccess:massaccess.yml
+---
+metadata:
+  title: |
+    Petition for Expungement of Marijuana Offenses
+  short title: |
+    Expungement of Marijuana Offenses
+  tags:
+    - Other
+    - RI-10-00-00-00
+  authors:
+    - Hayden McGuire
+---
+mandatory: True
+comment: |
+  Global interview metadata
+variable name: interview_metadata["expungment_petition"]
+data:
+  al_weaver_version: "1.9.0"
+  generated on: "2023-03-28"
+  title: >-
+    Petition for Expungement of Marijuana Offenses
+  short title: >-
+    Expungement of Marijuana Offenses
+  description: |-
+    This form can be filed to request expungement of a cannabis offense based upon the new law removing judicial deference for misdemeanor offenses.
+  original_form: >-
+    https://www.mass.gov/doc/petition-for-expungement-of-marijuana-offenses-form/download
+  allowed courts: 
+    - "Boston Municipal Court"
+    - "District Court"
+    - "Juvenile Court"
+    - "Superior Court"
+  categories:
+    - "RI-10-00-00-00"
+    - "CORI"
+    - "Expungement"
+    - "Cannabis"
+  typical role: "plaintiff"
+  generate download screen: True
+---
+code: |
+  interview_metadata['main_interview_key'] =  'expungment_petition'
+---
+code: |
+  # This controls the default country and list of states in address field questions
+  AL_DEFAULT_COUNTRY = "US"
+---
+code: |
+  # This controls the default state in address field questions
+  AL_DEFAULT_STATE = "MA"
+---
+code: |
+  github_repo_name =  'docassemble-ExpungmentPetition'
+---
+code: |
+  interview_short_title = "Petition for Expungement of Marijuana Offenses"
+---
+code: |
+  al_form_type = "starts_case" 
+---
+objects:
+  - users: ALPeopleList.using(ask_number=True,target_number=1)
+---
+sections:
+  - review_expungment_petition: Review your answers
+---
+#################### Interview order #####################
+comment: |
+  Controls order and branching logic for questions specific to this form
+id: interview_order_expungment_petition
+code: |
+  # Set the allowed courts for this interview
+  allowed_courts = interview_metadata["expungment_petition"]["allowed courts"]
+  nav.set_section("review_expungment_petition")
+  user_role = "plaintiff"
+  user_ask_role = "plaintiff"
+  users.gather()
+  users[0].address.address
+  set_parts(subtitle=str(users))
+  convicting_court
+  set_convicting_court
+  docket_number
+  set_progress(20)
+  courts[0].division
+  is_possesion_yes
+  set_progress(40)
+  reason_detail
+  is_hearing_yes
+  is_mail_delivered_yes
+  is_interpreter_yes
+  is_decriminalized_yes
+  signature_date
+  interview_order_expungment_petition = True
+---
+###################### Main order ######################
+comment: |
+  This block includes the logic for standalone interviews.
+  Delete mandatory: True to include in another interview
+mandatory: True
+code: |
+  al_intro_screen
+  expungment_petition_intro
+  interview_order_expungment_petition
+  signature_date
+  # Store anonymous data for analytics / statistics
+  store_variables_snapshot(
+      persistent=True,
+      data={
+          "zip": showifdef("users[0].address.zip"),
+          "reached_interview_end": True,
+      },
+  )
+  expungment_petition_download
+---
+comment: |
+  This question is used to introduce your interview. Please customize
+id: Petition_for_Expungement_of_Marijuana_Offenses
+continue button field: expungment_petition_intro
+question: |
+  Petition for Expungement of Marijuana Offenses
+subquestion: |
+  To complete this interview you will need the information identified below about your past offense.  
+  
+  * Docket Number
+  * All Criminal Charges
+  * Counts or Number of Charges Involved
+  * Court Department and Division
+  
+  To be successful in your expungement request you must show to the judge that the **amount** and **context** of **marijuana involved** in the underlying offense(s) can be best described as one of the following: 
+  
+  1. was two ounces or less; 
+  2. was ten ounces or less **and** within your primary residence; **or** 
+  3. consisted of six or fewer marijuana plants for personal use or twelve or fewer marijuana plants on the premises.
+---
+id: your name
+sets:
+    - users[0].name.first
+    - users[0].name.last
+    - users[0].name.middle
+    - users[0].name.suffix
+    - users[0].phone_number
+question:  |
+  What is your name and phone number?
+fields:
+  - code: |
+      users[0].name_fields()
+  - "Phone Number": users[0].phone_number
+---
+id: Court Information
+question: |
+  Sentencing Court Division
+subquestion: |
+  Select the court you were sentenced. 
+field: convicting_court
+choices:
+  - Superior Court
+  - District Court
+  - Boston Municipal Court (BMC)
+  - Juvenile Court
+---
+id: sets_court
+depends on:
+  - convicting_court
+code: |
+  if convicting_court == 'Superior Court':   
+    is_district_court_yest = False
+    is_bmc_yes = False
+    is_juvenile_court_yes = False
+    is_superior_court_yes = True
+  elif convicting_court == "District Court":   
+    is_district_court_yest = True
+    is_bmc_yes = False
+    is_juvenile_court_yes = False
+    is_superior_court_yes = False
+  elif convicting_court == "Boston Municipal Court (BMC)":
+    is_district_court_yest = False
+    is_bmc_yes = True
+    is_juvenile_court_yes = False
+    is_superior_court_yes = False
+  elif convicting_court == "Juvenile Court":
+    is_district_court_yest = False
+    is_bmc_yes = False
+    is_juvenile_court_yes = True
+    is_superior_court_yes = False
+  set_convicting_court = True
+---
+id: docket number
+question: |
+  What is the docket number for your case?
+fields:  
+  - Docket number: docket_number
+---
+if: |
+  len(all_matches) and all_courts.filter_courts(allowed_courts) 
+id: choose a court (courts matching provided address were found)
+question: |
+  Filing Location
+subquestion: |
+  Pick the court from the list that you will fill this petition in. 
+  
+  You must file this petition in the clerk's office in the court where the criminal case was heard. 
+fields:    
+  - no label: trial_court
+    datatype: object
+    object labeler: court_short_label
+    choices: all_courts.filter_courts(allowed_courts)    
+---
+id: Interpreter Questions
+question: |
+  Do you need an interpreter?
+subquestion: |
+  You are entitled to a free interpreter in any hearings you have about this complaint. If it would improve your ability to communicate with the judge or understand you should request one.  
+fields:
+  - no label: is_interpreter_yes
+    datatype: yesnoradio
+  - "Language": interpreter_language
+    maxlength: 40
+    show if: is_interpreter_yes
+---
+depends on:
+  - is_interpreter_yes
+code: |
+  if is_interpreter_yes == False:
+    interpreter_language = "N/A"
+---
+id: Docket and Charge Info
+question: |
+  Charge Info
+subquestion: |
+  The options below indicate a  charge you can get expunged through this interview and under the new rules that removed significant {judicial deference} to deny these expungment requests.  Judges cannot deny these requests if the amount of marijuana you possesed or culitvated is now decriminalized. 
+  
+  **Home possession or cultivation** is decriminalized up to ten ounces or six plants.
+  
+  **Public possesion**  is now decriminalized up to two ounces or fifty-six grams.
+ 
+  Select all charges in your docket: 
+fields:
+  - "Possession of Marijuana - G.L. c. 94C, § 34": is_possesion_yes
+    datatype: yesno
+  - "Growing of Marijuana - G.L. c. 94C, § 32C(a)": is_cultivation_yes
+    datatype: yesno
+  - "Possession of Marijuana with Intent to Distribute - G.L. c. 94C, § 32C(a)": is_distribution_intent_yes
+    datatype: yesno
+  - "Distribution of Marijuana - G.L. c. 94C, § 32C(a)": is_distribution_yes1
+    datatype: yesno
+  - "Subsequent Charge of Possession of Marijuana - G.L. c. 94C, § 34": is_possesion_subsequent_yes
+    datatype: yesno
+  - "Subsequent Charge of Cultivation of Marijuana - G.L. c. 94C, § 32C(b)": is_cultivation_subsequent_yes
+    datatype: yesno
+  - "Subsequent Charge of Possession with Intent to Distribute - G.L. c. 94C, § 32C(b)": is_distribution_intent_subsequent_yes
+    datatype: yesno
+  - "Subsequent Charge of Distribution of Marijuana - G.L. c. 94C, § 32C(b)": is_distribution_yes2
+    datatype: yesno
+  - "Number charges in this case?": counts
+    datatype: number
+    help: |
+      Type the number of check boxes you selected.
+terms:
+  judicial deference: |
+    Judicial deference refers to the amount of independent judgment or opinion a judge is allowed to use when making a decision about how the law is supposed to work in a certain situation. 
+---
+id: Additional Info
+question: |
+  Additional Info
+subquestion: |
+  Describe to the judge why you believe your motion should be granted. Provide as much detail and reasoning as you can. 
+fields:
+  - "Reasons to expunge:": reason_detail
+    input type: area
+    maxlength: 160
+  - "Do you need more space?": is_adendum_yes
+    datatype: yesnoradio
+  - "Reasons continued": additional_info
+    input type: area
+    maxlength: 100
+    show if: is_adendum_yes
+  - "Do you want to attach extra documents to this petition that supports your request?": is_supporting_documents_yes
+    datatype: yesno 
+---
+id: Hearing Request
+question: |
+  Hearing on your Complaint
+subquestion: |
+  In a hearing you will talk directly with the judge who decides whether or not to grant your expungment request. You can tell the judge why you think the marijuana record(s) should be expunged. 
+  
+  If you don't request a hearing, the judge still can hold one that you must be at. If a hearing is scheduled, the clerk's office will notify you of the hearing date and time.
+fields:
+  - "Would you like the Court to hold a hearing?": is_hearing_yes
+    datatype: yesnoradio
+---
+id: Delivery or Service
+question: |
+  Service or Deliver
+subquestion: |
+  You need to give a copy of this petition and any documents that you file with it  to the District Attorney's Office that prosecuted the case on or before the day that you file this petition in court. 
+  
+  You can do this by bringing a copy to the District Attorney's Office or by mailing a copy to the District Attorney's Office by first-class mail. You are not required to provide proof of hand delivery or mailing at this time, but may want to obtain and preserve proof of delivery or mailing for your records. 
+fields:
+  - "Are you delivering the documents to the District Attorney's Office by mail?": is_mail_delivered_yes
+    datatype: yesnoradio
+  - "Are you delivering the documents to the District Attorney's Office by hand?": is_hand_delivered_yes
+    datatype: yesnoradio
+  - "What date are you delivering the documents?": deliver_date
+    datatype: date
+    help: |
+      If you are sending the motion and documents by first-class mail select the date you will put it in the mail.
+---
+id: check the box
+code: |
+  is_decriminalized_yes = True
+---
+id: preview expungment_petition
+question: |
+  Preview your form before you sign it
+subquestion: |
+  Here is a preview of the form you will sign on the next page.   
+  
+  ${ al_court_bundle.as_pdf(key='preview') }
+
+  Click the image to open it in a new tab. Click the "Edit answers" button
+  to edit your answers.
+
+  ${ action_button_html(url_action('review_expungment_petition'), label='Edit answers', color='info') }
+  
+  Remember to come back to this window to continue and sign your form.
+continue button field: expungment_petition_preview_question    
+---
+code: |
+  signature_fields = ['users[0].signature']
+---
+code: |
+  # This is a placeholder for the addresses that will be searched
+  # for matching address to court. Edit if court venue is based on 
+  # a different address than the user's
+  [user.address.address for user in users.complete_elements()]
+  addresses_to_search = [user.address for user in users.complete_elements()]
+---
+id: expungment petition review screen
+event: review_expungment_petition
+question: |
+  Review your answers
+review:
+  - Edit: docket_number
+    button: |
+      **Docket number**:
+      ${ docket_number }
+  - Edit: is_bmc_yes
+    button: |
+      **Was the case originally in Boston Municipal Court?**:
+      ${ word(yesno(is_bmc_yes)) }
+  - Edit: is_juvenile_court_yes
+    button: |
+      **Was the case originally in Juvenile Court?**:
+      ${ word(yesno(is_juvenile_court_yes)) }
+  - Edit: is_district_court_yest
+    button: |
+      **Was the case originally in District Court?**:
+      ${ word(yesno(is_district_court_yest)) }
+  - Edit: is_superior_court_yes
+    button: |
+      **Was the case originally in Superior Court?**:
+      ${ word(yesno(is_superior_court_yes)) }
+  - Edit: users.revisit
+    button: |
+      **Users**
+
+      % for item in users:
+        * ${ item }
+      % endfor
+  - Edit: courts.revisit
+    button: |
+      **Courts**
+
+      % for item in courts:
+        * ${ item }
+      % endfor
+  - Edit: interpreter_language
+    button: |
+      **What language interpreter do you want?**:
+      ${ interpreter_language }
+  - Edit: is_interpreter_yes
+    button: |
+      **Do you need a interpreter for court?**:
+      ${ word(yesno(is_interpreter_yes)) }
+  - Edit: is_possesion_yes
+    button: |
+      **Possession of Marijuana**:
+      ${ word(yesno(is_possesion_yes)) }
+  - Edit: is_cultivation_yes
+    button: |
+      **Growing of Marijuana**:
+      ${ word(yesno(is_cultivation_yes)) }
+  - Edit: is_distribution_intent_yes
+    button: |
+      **Possession of Marijuana with Intent to Distribute**:
+      ${ word(yesno(is_distribution_intent_yes)) }
+  - Edit: is_distribution_yes1
+    button: |
+      **Distribution of Marijuana**:
+      ${ word(yesno(is_distribution_yes1)) }
+  - Edit: is_possesion_subsequent_yes
+    button: |
+      **Subsequent Charge of Possession of Marijuana**:
+      ${ word(yesno(is_possesion_subsequent_yes)) }
+  - Edit: is_cultivation_subsequent_yes
+    button: |
+      **Subsequent Charge of Cultivation of Marijuana**:
+      ${ word(yesno(is_cultivation_subsequent_yes)) }
+  - Edit: is_distribution_intent_subsequent_yes
+    button: |
+      **Subsequent Charge of Possession with Intent to Distribute**:
+      ${ word(yesno(is_distribution_intent_subsequent_yes)) }
+  - Edit: is_distribution_yes2
+    button: |
+      **Subsequent Charge of Distribution of Marijuana**:
+      ${ word(yesno(is_distribution_yes2)) }
+  - Edit: counts
+    button: |
+      **Number of counts (or charges) in this case?**:
+      ${ counts }
+  - Edit: is_decriminalized_yes
+    button: |
+      **The criminal records I am seeking expungement of are now decriminalized based on amount of marijuana involved.**:
+      ${ word(yesno(is_decriminalized_yes)) }
+  - Edit: reason_detail
+    button: |
+      **Please provide as much information about why you would like these records expunged.**:
+      > ${ single_paragraph(reason_detail) }
+  - Edit: is_hearing_yes
+    button: |
+      **Would you like the Court to hold a hearing?**:
+      ${ word(yesno(is_hearing_yes)) }
+  - Edit: is_adendum_yes
+    button: |
+      **Are you using the "Additional Info" area?**:
+      ${ word(yesno(is_adendum_yes)) }
+  - Edit: is_supporting_documents_yes
+    button: |
+      **Are you goin to attach any extra documents to this petition that support your request?**:
+      ${ word(yesno(is_supporting_documents_yes)) }
+  - Edit: is_mail_delivered_yes
+    button: |
+      **Are you delivering this to the District Attorney's Office by mail?**:
+      ${ word(yesno(is_mail_delivered_yes)) }
+  - Edit: is_hand_delivered_yes
+    button: |
+      **Are you delivering this to the District Attorney's Office by hand?**:
+      ${ word(yesno(is_hand_delivered_yes)) }
+  - Edit: deliver_date
+    button: |
+      **What date are you delivering this petition?**:
+      ${ deliver_date }
+  - Edit: signature_date
+    button: |
+      **Date of signature**:
+      ${ signature_date }
+  - Edit: additional_info
+    button: |
+      **Provide any additional information and support about your case or your request for expungement you would like the judge to consider.**:
+      > ${ single_paragraph(additional_info) }
+---
+continue button field: users.revisit
+question: |
+  Edit users
+subquestion: |
+  ${ users.table }
+
+  ${ users.add_action() }
+---
+table: users.table
+rows: users
+columns:
+  - Name: |
+      row_item.name.full() if defined("row_item.name.first") else ""
+  - Signature: |
+      row_item.signature if defined("row_item.signature") else ""
+edit:
+  - name.first
+  - signature
+confirm: True
+---
+continue button field: courts.revisit
+question: |
+  Edit courts
+subquestion: |
+  ${ courts.table }
+
+  ${ courts.add_action() }
+---
+table: courts.table
+rows: courts
+columns:
+  - Division: |
+      row_item.division if defined("row_item.division") else ""
+edit:
+  - division
+confirm: True
+
+---
+id: download expungment_petition
+event: expungment_petition_download
+question: |
+  All done
+subquestion: |
+  Thank you ${users}. Your form is ready to download and deliver.
+  
+  View, download and send your form below. Click the "Edit answers" button to fix any mistakes.
+
+  ${ action_button_html(url_action('review_expungment_petition'), label='Edit answers', color='info') }
+  
+  
+  ${ al_user_bundle.download_list_html() }
+  
+
+  ${ al_user_bundle.send_button_html(show_editable_checkbox=False) }
+
+progress: 100
+---
+# ALDocument objects specify the metadata for each template
+objects:
+  - expungment_petition_Post_interview_instructions: ALDocument.using(title="Instructions", filename="expungment_petition_next_steps.docx", enabled=True, has_addendum=False)
+  - expungment_petition_attachment: ALDocument.using(title="Petition for Expungement of Marijuana Offenses", filename="expungment_petition", enabled=True, has_addendum=False, )
+---
+# Bundles group the ALDocuments into separate downloads, such as for court and for the user
+objects:
+  - al_user_bundle: ALDocumentBundle.using(elements=[expungment_petition_Post_interview_instructions, expungment_petition_attachment], filename="expungment_petition", title="All forms to download for your records", enabled=True)
+  - al_court_bundle: ALDocumentBundle.using(elements=[expungment_petition_attachment],  filename="expungment_petition", title="All forms to deliver to court", enabled=True)
+---
+# Each attachment defines a key in an ALDocument. We use `i` as the placeholder here so the same template is 
+# used for "preview" and "final" keys, and logic in the template checks the value of 
+# `i` to show or hide the user's signature
+attachment:
+  name: Post-interview-Instructions
+  filename: expungment_petition_next_steps
+  docx template file: expungment_petition_next_steps.docx
+  variable name: expungment_petition_Post_interview_instructions[i]
+  skip undefined: True
+---
+attachment:
+  name: expungment petition
+  filename: expungment_petition
+  variable name: expungment_petition_attachment[i]
+  skip undefined: True
+  pdf template file: expungment_petition.pdf
+  fields:
+      - "docket_number": ${ docket_number }
+      - "is_bmc_yes": ${ is_bmc_yes }
+      - "is_juvenile_court_yes": ${ is_juvenile_court_yes }
+      - "is_district_court_yest": ${ is_district_court_yest }
+      - "is_superior_court_yes": ${ is_superior_court_yes }
+      - "user_name": |
+          ${ users[0] }
+          ${ users[0].address }
+          ${ users[0].phone_number}
+      - "court_division": ${ courts[0].division }
+      - "interpreter_language": ${ interpreter_language }
+      - "is_interpreter_yes": ${ is_interpreter_yes }
+      - "is_possesion_yes": ${ is_possesion_yes }
+      - "is_cultivation_yes": ${ is_cultivation_yes }
+      - "is_distribution_intent_yes": ${ is_distribution_intent_yes }
+      - "is_distribution_yes1": ${ is_distribution_yes1 }
+      - "is_possesion_subsequent_yes": ${ is_possesion_subsequent_yes }
+      - "is_cultivation_subsequent_yes": ${ is_cultivation_subsequent_yes }
+      - "is_distribution_intent_subsequent_yes": ${ is_distribution_intent_subsequent_yes }
+      - "is_distribution_yes2": ${ is_distribution_yes2 }
+      - "counts": ${ int(counts) }
+      - "is_decriminalized_yes": ${ is_decriminalized_yes }
+      - "reason_detail": ${ reason_detail }
+      - "is_hearing_yes": ${ is_hearing_yes }
+      - "is_adendum_yes": ${ is_adendum_yes }
+      - "is_supporting_documents_yes": ${ is_supporting_documents_yes }
+      - "is_mail_delivered_yes": ${ is_mail_delivered_yes }
+      - "is_hand_delivered_yes": ${ is_hand_delivered_yes }
+      - "deliver_date": ${ deliver_date.format() }
+      - "user_signature": ${ users[0].signature_if_final(i) }
+      - "signature_date": ${ signature_date }
+      - "additional_info": ${ additional_info }
