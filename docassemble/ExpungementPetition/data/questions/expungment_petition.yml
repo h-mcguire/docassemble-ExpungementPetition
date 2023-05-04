@@ -167,7 +167,7 @@ id: Court Information
 question: |
   Past Sentencing Court Division
 subquestion: |
-  Select the court you were sentenced in for the charge you are seeking expungment for. 
+  Select the court you were sentenced in for the charge you are seeking expungement for. 
 field: convicting_court
 choices:
   - Superior Court
@@ -244,7 +244,7 @@ id: Docket and Charge Info
 question: |
   Charge Info
 subquestion: |
-  The options below indicate a  charge you can get expunged through this interview and under the new rules that removed significant {judicial deference} to deny these expungment requests.  Judges cannot deny these requests if the amount of marijuana you possesed or culitvated is now decriminalized. 
+  The options below indicate a charge you can get expunged through this interview and under the new rules that removed significant {judicial deference} to deny these expungement requests.  Judges cannot deny these requests if the amount of marijuana you possessed or cultivated is now decriminalized. 
   
   **Home possession or cultivation** is decriminalized up to ten ounces or six plants.
   
@@ -299,7 +299,7 @@ id: Hearing Request
 question: |
   Hearing on your Complaint
 subquestion: |
-  In a hearing you will talk directly with the judge who decides whether or not to grant your expungment request. You can tell the judge why you think the marijuana record(s) should be expunged. 
+  In a hearing you will talk directly with the judge who decides whether or not to grant your expungement request. You can tell the judge why you think the marijuana record(s) should be expunged. 
   
   If you don't request a hearing, the judge still can hold one that you must be at. If a hearing is scheduled, the clerk's office will notify you of the hearing date and time.
 fields:
