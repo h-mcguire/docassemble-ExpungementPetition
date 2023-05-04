@@ -79,6 +79,7 @@ code: |
   nav.set_section("review_expungment_petition")
   user_role = "plaintiff"
   user_ask_role = "plaintiff"
+  warning_effects
   users.gather()
   users[0].address.address
   set_parts(subtitle=str(users))
@@ -117,8 +118,6 @@ code: |
   )
   expungment_petition_download
 ---
-comment: |
-  This question is used to introduce your interview. Please customize
 id: Petition_for_Expungement_of_Marijuana_Offenses
 continue button field: expungment_petition_intro
 question: |
@@ -137,6 +136,19 @@ subquestion: |
   2. was ten ounces or less **and** within your primary residence; **or** 
   3. consisted of six or fewer marijuana plants for personal use or twelve or fewer marijuana plants on the premises.
 ---
+id: warn effects
+continue button field: warning_effects
+question: |
+  Before you file!
+subquestion: |
+  **Get certified copies of everything!**
+  
+  Before you file to expunge any case, get multiple certified copies of:
+  
+  * The complaint
+  * Docket sheets
+  * Any papers related to the conviction you may need
+---
 id: your name
 sets:
     - users[0].name.first
@@ -153,9 +165,9 @@ fields:
 ---
 id: Court Information
 question: |
-  Sentencing Court Division
+  Past Sentencing Court Division
 subquestion: |
-  Select the court you were sentenced. 
+  Select the court you were sentenced in for the charge you are seeking expungment for. 
 field: convicting_court
 choices:
   - Superior Court
@@ -199,9 +211,9 @@ if: |
   len(all_matches) and all_courts.filter_courts(allowed_courts) 
 id: choose a court (courts matching provided address were found)
 question: |
-  Filing Location
+  Court Filing Location
 subquestion: |
-  Pick the court from the list that you will fill this petition in. 
+  Select the court from the list that you will fill this petition in. 
   
   You must file this petition in the clerk's office in the court where the criminal case was heard. 
 fields:    
@@ -270,14 +282,15 @@ question: |
 subquestion: |
   Describe to the judge why you believe your motion should be granted. Provide as much detail and reasoning as you can. 
 fields:
-  - "Reasons to expunge:": reason_detail
+  - "Reason to expunge:": reason_detail
     input type: area
-    maxlength: 160
+    maxlength: 400
+    hint: The court should expunge my past marijuana conviction in the case referenced by this petition because it meets the requirements of being under two ounces in my possession. The past offense carries a significant stigma and may harm my opportunities for housing and work in the future. It is unjust these convictions remain on my record when the offense is no longer a crime. 
   - "Do you need more space?": is_adendum_yes
     datatype: yesnoradio
   - "Reasons continued": additional_info
     input type: area
-    maxlength: 100
+    maxlength: 150
     show if: is_adendum_yes
   - "Do you want to attach extra documents to this petition that supports your request?": is_supporting_documents_yes
     datatype: yesno 
